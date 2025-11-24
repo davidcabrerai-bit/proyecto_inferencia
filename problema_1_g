@@ -1,0 +1,65 @@
+# --- 1. CONFIGURACIÓN INICIAL ---
+# Instalar y cargar el paquete necesario
+# fitdistrplus es necesario para fitdist() y bootdist()
+if (!requireNamespace("fitdistrplus", quietly = TRUE)) {
+  install.packages("fitdistrplus")
+}
+library(fitdistrplus)
+
+# Establecer una semilla para que los resultados del bootstrap sean reproducibles
+set.seed(123)
+
+# --- 2. CARGA DE DATOS ---
+# Cargar los datos desde la URL (la misma del Problema 1a) 
+data_url <- "https://cmustatistics.github.io/data-repository/data/ames-housing.csv"
+datos_completos <- read.csv(url(data_url))
+
+# Extraer la variable de interés y eliminar NAs
+SalePrice <- na.omit(datos_completos$SalePrice)
+
+# --- 3. AJUSTE DEL MODELO ORIGINAL (DE 1b) ---
+# Ajustar la distribución Lognormal por Máxima Verosimilitud (MLE) 
+fit_lnorm <- fitdist(SalePrice, "lnorm", method = "mle")
+
+# Imprimir los parámetros estimados originales (para referencia)
+print("Parámetros originales (de 1b):")
+print(fit_lnorm$estimate)
+
+
+# --- 4. BOOTSTRAP PARA INCERTIDUMBRE DE PARÁMETROS ---
+# Realizar un bootstrap no paramétrico
+# niter=1001 generará 1001 muestras de bootstrap
+# bootmethod = "nonparam" significa que remuestrea los datos originales
+print("Iniciando bootstrap (esto puede tardar unos segundos)...")
+boot_results <- bootdist(fit_lnorm, bootmethod = "nonparam", niter = 1001)
+print("Bootstrap completado.")
+
+# El resultado 'boot_results$estim' es un data.frame
+# que contiene 1001 filas, cada una con un 'meanlog' y 'sdlog' simulado
+# head(boot_results$estim)
+
+
+# --- 5. CÁLCULO DEL IC PARA LA MEDIA ---
+# Extraer el data.frame de parámetros simulados
+boot_params <- boot_results$estim
+
+# Aplicar la fórmula de la media de la Lognormal (de 1f) 
+# a cada una de las 1001 filas de parámetros simulados
+boot_means <- exp(boot_params$meanlog + 0.5 * (boot_params$sdlog^2))
+
+# Calcular el Intervalo de Confianza del 95%
+# Usamos el método de percentiles sobre el vector de medias simuladas
+CI_95 <- quantile(boot_means, probs = c(0.025, 0.975), na.rm = TRUE)
+
+# --- 6. MOSTRAR RESULTADOS ---
+# Mostrar el valor esperado (puntual) de 1f
+# Usamos los parámetros de fit_lnorm
+mean_puntual <- exp(fit_lnorm$estimate["meanlog"] + 
+                    0.5 * (fit_lnorm$estimate["sdlog"]^2))
+
+print(paste("Valor esperado (Estimación puntual de 1f):", 
+            format(mean_puntual, nsmall = 2, big.mark = ",")))
+
+# Mostrar el intervalo de confianza del 95%
+print("Intervalo de Confianza del 95% para la Media (vía Bootstrap):")
+print(format(CI_95, nsmall = 2, big.mark = ","))
