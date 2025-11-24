@@ -1,0 +1,66 @@
+
+# 1. Cargar el conjunto de datos 'quakes' (incorporado en R)
+# Los datos del archivo data.txt corresponden a este conjunto.
+data(quakes)
+
+# 2. Extraer la variable de interés (magnitud)
+magnitudes <- quakes$mag
+
+# 3. Obtener parámetros
+n <- length(magnitudes) # Tamaño de la muestra (n=1000)
+alpha <- 0.05            # Nivel de significancia
+
+# 4. Calcular Epsilon (epsilon) usando la fórmula DKW
+# Esta es la fórmula clave para el ancho de la banda
+epsilon <- sqrt((1 / (2 * n)) * log(2 / alpha))
+
+# Imprimir los valores calculados
+print(paste("Tamaño de la muestra (n):", n))
+print(paste("Valor de épsilon (ancho de la banda):", epsilon))
+
+# 5. Definir la ECDF y las bandas
+# R tiene una función 'ecdf' que crea la función empírica
+ecdf_function <- ecdf(magnitudes)
+
+# Para un gráfico suave, creamos una cuadrícula de puntos 'x'
+x_grid <- seq(min(magnitudes), max(magnitudes), length.out = 500)
+
+# Calculamos el valor de la ECDF en cada punto de la cuadrícula
+ecdf_values <- ecdf_function(x_grid)
+
+# Calculamos las bandas usando las fórmulas L(x) y U(x)
+# pmax/pmin son "parallel max/min" para asegurar que L(x) >= 0 y U(x) <= 1
+lower_band <- pmax(ecdf_values - epsilon, 0)
+upper_band <- pmin(ecdf_values + epsilon, 1)
+
+# 6. Generar el Gráfico
+
+# Abrir un dispositivo PNG para guardar el gráfico
+png("ecdf_confidence_bands.png", width=800, height=600)
+
+# Graficar la ECDF (similar a la Figura 6 del PDF)
+plot(ecdf_function, 
+     main="Función de Distribución Acumulada (ECDF) con Bandas de Confianza del 95%",
+     xlab="Magnitud (mag)",
+     ylab="Probabilidad Acumulada F(x)",
+     col="blue",         # Color de la ECDF
+     verticals = TRUE,   # Dibuja el gráfico escalonado
+     do.points = TRUE,   # Muestra los puntos de datos
+     pch = 19,           # Tipo de punto (círculo pequeño)
+     cex = 0.5,          # Tamaño del punto
+     lwd = 1.5)          # Ancho de la línea
+
+# Añadir las bandas de confianza al gráfico
+lines(x_grid, lower_band, col="red", lty=2, lwd=2) # lty=2 es línea discontinua
+lines(x_grid, upper_band, col="red", lty=2, lwd=2)
+
+# Añadir una leyenda para claridad
+legend("right", 
+       legend=c("ECDF (F_n(x))", "Bandas de Confianza 95%"),
+       col=c("blue", "red"),
+       lty=c(1, 2),
+       lwd=c(1.5, 2),
+       pch=c(19, NA))
+
+# Cerrar el dispositivo PNG y guardar el archivo
+dev.off()
