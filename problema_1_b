@@ -1,0 +1,54 @@
+# --- Instalación y Carga de Paquetes ---
+# Este script mejorado verifica si los paquetes ya están instalados.
+# Si no lo están, los instalará automáticamente.
+
+# 1. Paquete para ajuste de distribuciones
+if (!requireNamespace("fitdistrplus", quietly = TRUE)) {
+  install.packages("fitdistrplus")
+}
+library(fitdistrplus)
+
+# 2. Paquete para pruebas de normalidad (Lilliefors, A-D)
+# Esto soluciona el error: "there is no package called 'nortest'"
+if (!requireNamespace("nortest", quietly = TRUE)) {
+  install.packages("nortest")
+}
+library(nortest)
+
+# 3. Paquete para la prueba K-S corregida (Bootstrap)
+if (!requireNamespace("KScorrect", quietly = TRUE)) {
+  install.packages("KScorrect")
+}
+library(KScorrect)
+
+print("Paquetes cargados correctamente.")
+
+# --- Carga de Datos ---
+# Definir la URL de los datos (enlace directo al archivo CSV)
+# Esta URL se deriva del enlace en el documento del proyecto 
+data_url <- "https://cmustatistics.github.io/data-repository/data/ames-housing.csv"
+
+# Cargar los datos en un data.frame
+# Usamos read.csv con url() para leer directamente desde internet
+datos_completos <- read.csv(url(data_url))
+
+# Extraer la variable de interés: SalePrice
+# Nos aseguramos de eliminar valores NA si existieran
+SalePrice <- na.omit(datos_completos$SalePrice)
+
+# Obtenemos el tamaño de la muestra, N
+N <- length(SalePrice)
+print(paste("Tamaño de la muestra (N):", N))
+# Resultado:  "Tamaño de la muestra (N): 2930"
+
+# Crear la variable log-transformada
+log_saleprice <- log(SalePrice)
+
+# Cargar la librería "nortest" si no se ha hecho
+# (Ya se hizo en la Sección 2, pero lo mostramos aquí por claridad)
+library(nortest)
+
+# Ejecutar la prueba de Lilliefors
+lillie_test <- lillie.test(log_saleprice)
+print(lillie_test)
+
