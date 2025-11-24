@@ -1,0 +1,13 @@
+# 1. Cargar los datos desde el archivo data.txt
+# header = TRUE indica que la primera fila contiene los nombres de las columnas
+datos <- read.table("data.txt", header = TRUE)
+
+# 2. Extraer la variable de interés 'mag' (Magnitud)
+magnitud <- datos$mag
+
+# 3. Generar el resumen estadístico (Summary)
+# Esta función calcula: Mínimo, 1er Cuartil, Mediana, Media, 3er Cuartil y Máximo
+resumen <- summary(magnitud)
+
+# 4. Imprimir el resultado en la consola
+print(resumen)
