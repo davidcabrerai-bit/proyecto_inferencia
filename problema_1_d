@@ -1,0 +1,59 @@
+# -----------------------------------------------------------------
+# Carga de Librerías
+# -----------------------------------------------------------------
+# Instalar paquetes si no se tienen
+# install.packages("nortest")
+# install.packages("EnvStats")
+
+library(nortest)  # Para los tests de Anderson-Darling y Lilliefors
+library(EnvStats) # Para el test gofTest directo
+
+# -----------------------------------------------------------------
+# Carga y Preparación de Datos
+# -----------------------------------------------------------------
+# Asumiendo que los datos están en un archivo CSV llamado 'ames-housing.csv'
+# y la variable de interés es 'SalePrice'
+# Nota: La URL del PDF original apunta a un repositorio de datos.
+data_url <- "https://cmustatistics.github.io/data-repository/data/ames-housing.csv"
+tryCatch({
+  datos <- read.csv(data_url)
+}, error = function(e) {
+  stop("No se pudo descargar el archivo de datos. Verifique la conexión a internet o la URL.")
+})
+
+# Extraer la variable de interés
+sale_price <- datos$SalePrice
+
+# 1. Transformar la variable de interés
+# El test de Lognormalidad sobre X es equivalente al test de Normalidad sobre Y = log(X)
+y_log <- log(sale_price)
+
+# -----------------------------------------------------------------
+# Ejecución de Pruebas de Bondad de Ajuste (GoF)
+# -----------------------------------------------------------------
+
+# MÉTODO 1: Test de Anderson-Darling (Recomendado)
+# Prueba la hipótesis compuesta de normalidad sobre los datos log-transformados.
+# Es potente para detectar desviaciones en las colas.
+cat("--- Test de Anderson-Darling (sobre log(SalePrice)) ---\n")
+test_ad <- ad.test(y_log)
+print(test_ad)
+cat("\n")
+
+# MÉTODO 2: Test de Lilliefors (Corrección de Kolmogorov-Smirnov)
+# Prueba la hipótesis compuesta de normalidad sobre los datos log-transformados.
+cat("--- Test de Lilliefors (sobre log(SalePrice)) ---\n")
+test_lilliefors <- lillie.test(y_log)
+print(test_lilliefors)
+cat("\n")
+
+# MÉTODO 3: (Validación) Test GoF directo de EnvStats
+# Esta función está diseñada para manejar la estimación de parámetros.
+# Se aplica directamente a los datos originales, especificando la distribución.
+cat("--- Test de EnvStats gofTest (directo sobre SalePrice) ---\n")
+test_gof <- gofTest(sale_price, distribution = "lnorm")
+print(test_gof)
+cat("\n")
+
+# -----------------------------------------------------------------
+
