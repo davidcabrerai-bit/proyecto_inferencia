@@ -1,0 +1,24 @@
+
+ruta_archivo <- "C:\\Users\\david.cabrerai\\Desktop\\data.txt"
+# header = TRUE indica que la primera fila es el encabezado 
+quakes_data <- read.table(ruta_archivo, header = TRUE)
+
+# n = 1000 observaciones [1, 1]
+summary(quakes_data$mag)                  
+
+magnitudes <- quakes_data$mag
+
+ecdf_func <- ecdf(magnitudes)
+
+print(ecdf_func)
+
+plot(ecdf_func,
+     main = "Función de Distribución Acumulada Empírica (ECDF)
+             Magnitud de Terremotos en Fiji (n=1000)",
+     xlab = "Magnitud (mag)",
+     ylab = "Probabilidad Acumulada F(x)",
+     col = "blue",
+     pch = 19,      # Símbolo para los puntos (opcional)
+     cex = 0.5)     # Tamaño del símbolo (opcional)
+
+grid()
